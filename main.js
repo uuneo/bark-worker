@@ -249,6 +249,8 @@ class Handler {
             }
             const body = decodeURIComponent(parameters.body || "NoContent")
 
+            const subtitle = parameters.subtitle || undefined;
+
             let sound = parameters.sound || undefined
             if (sound) {
                 if (!sound.endsWith('.caf')) {
@@ -260,24 +262,13 @@ class Handler {
 
             const category = parameters.category || 'myNotificationCategory'
             const group = parameters.group || undefined
-            
-            const call = parameters.call || undefined
-            const isArchive = parameters.isArchive || undefined
-            const icon = parameters.icon || undefined
-            const ciphertext = parameters.ciphertext || undefined
-            const level = parameters.level || undefined
-            const volume = parameters.volume || undefined
-            const url = parameters.url || undefined
-            const copy = parameters.copy || undefined
-            const badge = parameters.badge || undefined
-            const autoCopy = parameters.autoCopy || undefined 
-
+    
             // https://developer.apple.com/documentation/usernotifications/generating-a-remote-notification
             const aps = {
                 'aps': {
                     'alert': {
                         'title': title,
-                        'subtitle': undefined,
+                        'subtitle': subtitle,
                         'body': body,
                         'launch-image': undefined,
                         'title-loc-key': undefined,
@@ -304,20 +295,14 @@ class Handler {
                     'dimissal-date': undefined,
                     'attributes-type': undefined,
                     'attributes': undefined,
-                },
-                // ExtParams
-                'call': call,
-                'isarchive': isArchive,
-                'icon': icon,
-                'ciphertext': ciphertext,
-                'level': level,
-                'volume': volume,
-                'url': url,
-                'copy': copy,
-                'badge': badge,
-                'autocopy': autoCopy,
+                }
             }
-
+            // Non-apple standard parameters
+            for (const [key, value] of Object.entries(parameters)) {
+                if (!aps.hasOwnProperty(key)) {
+                    aps[key] = value || undefined;
+                }
+            }  
             const apns = new APNs(db)
             const response = await apns.push(deviceToken, aps)
 
